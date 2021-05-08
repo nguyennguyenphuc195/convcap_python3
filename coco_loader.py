@@ -77,9 +77,9 @@ class coco_loader(Dataset):
             assert len(captions) == self.ncap_per_img
         
         #create tensor to store word index
-        wordclass = torch.zeros(len(captions), self.max_tokens)
+        wordclass = torch.zeros(len(captions), self.max_tokens, dtype=torch.long)
         #mask used to compute loss
-        sentence_mask = torch.zeros(len(captions), self.max_tokens)
+        sentence_mask = torch.zeros(len(captions), self.max_tokens, dtype=torch.uint8)
 
         for i, caption in enumerate(captions):
             #split raw caption, get rid of punctuation

@@ -14,9 +14,9 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader                                                                    
 
 from coco_loader import coco_loader
-from convcap import convcap
+from convcap import Convcap
 from vggfeats import Vgg16Feats
-from .device import DeviceDataLoader, get_default_device, to_device
+from device import DeviceDataLoader, get_default_device, to_device
 from test import test 
 
 default_device = get_default_device()
@@ -89,7 +89,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
         
         convcap_model.train()
         image_model.train()
-        for imgs, word_indices, sentence_masks, img_id in tqdm(train_dl):
+        for imgs, wordclass, mask, img_id in tqdm(train_dl):
             imgs = imgs.view(batchsize, 3, 224, 224)
             wordclass = wordclass.view(batchsize_cap, max_tokens)
             mask = mask.view(batchsize_cap, max_tokens)

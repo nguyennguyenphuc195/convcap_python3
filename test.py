@@ -16,11 +16,11 @@ from tqdm.notebook import tqdm
  
 from coco_loader import coco_loader
 from torchvision import models                                                                     
-from convcap import convcap
+from convcap import Convcap
 from vggfeats import Vgg16Feats
 from evaluate import language_eval
 
-from .device import DeviceDataLoader, get_default_device, to_device
+from device import DeviceDataLoader, get_default_device, to_device
 
 default_device = get_default_device()
 
