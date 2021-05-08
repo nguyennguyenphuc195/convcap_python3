@@ -52,8 +52,8 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
     image_model.train()
 
     #convcap model
-    convcap_model = convcap(train_ds.vocab_size, num_layers, is_attention)
-
+    convcap_model = Convcap(train_ds.vocab_size, num_layers, is_attention)
+    convcap_model = to_device(convcap_model, default_device)
     optimizer = optim.RMSprop(convcap_model.parameters(), lr=learning_rate)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=lr_step_size, gamma=.1)
     img_optimizer = None
@@ -121,12 +121,12 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             # change shape to (bs_cap * maxtokens,)
             wordclass = wordclass.contiguous().view(-1)
             mask      = mask.view(-1)
-            assert wordclass.size(0) == batchsize_cap * max_tokens
+            # assert wordclass.size(0) == batchsize_cap * (max_tokens - 1)
 
             maskids = torch.nonzero(mask.view(-1)).view(-1)
             #test
-            maskids_test = torch.nonzero(mask.view(-1)).cpu().numpy().reshape(-1)
-            assert torch.allclose(maskids, torch.from_numpy(maskids_test))
+            # maskids_test = torch.nonzero(mask.view(-1)).cpu().numpy().reshape(-1)
+            # assert torch.allclose(maskids.cpu(), torch.from_numpy(maskids_test))
 
             if is_attention:
                 loss = F.cross_entropy(logits[maskids, ...], wordclass[maskids, ...]) + (torch.sum(torch.pow(1. - torch.sum(attn, 1), 2))) / (batchsize_cap * height * width)
@@ -148,7 +148,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_scheduler.step()
 
         loss_train = loss_train / batch_count
-        print('[DEBUG] Training epoch %d has loss %f' % (epoch, loss_train))
+        # print('[DEBUG] Training epoch %d has loss %f' % (epoch, loss_train))
 
         checkpoint_path = os.path.join(".", "checkpoint", "model.pth")
         if img_optimizer:
@@ -158,7 +158,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer_state = None
             img_scheduler_state  = None
 
-        scores = test(convcap_model=convcap_model, image_model=image_model) 
+        scores, _ = test(convcap_model=convcap_model, image_model=image_model) 
         score  = scores["CIDEr"]
         print('[DEBUG] Training epoch %d has loss %f and score %f' % (epoch, loss_train, score))
         if img_optimizer:

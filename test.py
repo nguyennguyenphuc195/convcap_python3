@@ -33,7 +33,7 @@ def test(convcap_model=None, image_model=None, split="val", \
          coco_root="data/coco/", batchsize=20):
     data = coco_loader(coco_root, split=split, ncap_per_img=1)
     data_loader = DataLoader(dataset=data, num_workers=2, batch_size=batchsize, shuffle=False, drop_last=True)
-
+    data_loader = DeviceDataLoader(data_loader, default_device)
     convcap_model.train(False)
     image_model.train(False)
 
@@ -59,7 +59,7 @@ def test(convcap_model=None, image_model=None, split="val", \
             # then to (bs_cap * maxtokens, vocabulary_size) 
             logits = logits.permute(0, 2, 1).contiguous().view(batchsize*(max_tokens-1), -1)
 
-            wordprobs = F.softmax(logits, dim=-1).cpu().numpy()
+            wordprobs = F.softmax(logits, dim=-1).detach().cpu().numpy()
             wordids   = np.argmax(wordprobs, axis=-1)
 
             for k in range(batchsize):
