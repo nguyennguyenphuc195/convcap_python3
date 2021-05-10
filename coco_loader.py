@@ -41,8 +41,8 @@ class coco_loader(Dataset):
         annos = {}
 
         split_include = []
-        if split == "train": split_include = ["train", "restval"]
-        else: split_include = [split]
+        if self.split == "train": split_include = ["train", "restval"]
+        else: split_include = [self.split]
 
         for item in split_info["images"]:
             if item['split'] in split_include:

@@ -19,7 +19,7 @@ encoder.FLOAT_REPR = lambda o: format(o, '.3f')
 import sys
 
 
-def language_eval(input_data, savedir, split, scorers_incl):
+def language_eval(input_data, savedir, split, scorers_incl="CIDEr"):
     if type(input_data) == str: # Filename given.
         checkpoint = json.load(open(input_data, 'r'))
         preds = checkpoint
