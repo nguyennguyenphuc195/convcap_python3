@@ -36,6 +36,7 @@ def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
 
     return conv_feats, lin_feats
 
+
 def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num_layers=3,\
      is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8,\
      model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None):
@@ -82,6 +83,8 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
     
     for epoch in range(start_epoch, epochs):
         loss_train  = 0
+        emb0_grad_norm   = 0
+        clf1_grad_norm   = 0
         batch_count = 0
         if epoch == finetune_after:
             img_optimizer = optim.RMSprop(image_model.parameters(), lr=1e-5)
@@ -118,7 +121,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             #change shape to (bs_cap, maxtokens, vocabulary_size) 
             # then to (bs_cap * maxtokens, vocabulary_size) 
             logits = logits.permute(0, 2, 1).contiguous().view(batchsize_cap * (max_tokens - 1), -1)
-            # change shape to (bs_cap * maxtokens,)
+            # change shape to (bs_cap * (maxtokens - 1),)
             wordclass = wordclass.contiguous().view(-1)
             mask      = mask.view(-1)
             # assert wordclass.size(0) == batchsize_cap * (max_tokens - 1)
@@ -142,12 +145,24 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             if img_optimizer != None:
                 img_optimizer.step()
 
+            sum_square = 0
+            for params in convcap_model.emb_0.parameters():
+                sum_square += params.grad.data.norm(2).item() ** 2
+            emb0_grad_norm += sum_square ** (1 / 2)
+
+            sum_square = 0
+            for params in convcap_model.classifier_1.parameters():
+                sum_square += params.grad.data.norm(2).item() ** 2
+            clf1_grad_norm += sum_square ** (1 / 2)
         
         scheduler.step()
         if img_optimizer:
             img_scheduler.step()
 
         loss_train = loss_train / batch_count
+        emb0_grad_norm = emb0_grad_norm / batch_count
+        clf1_grad_norm = clf1_grad_norm / batch_count
+
         # print('[DEBUG] Training epoch %d has loss %f' % (epoch, loss_train))
 
         checkpoint_path = os.path.join(".", "checkpoint", "model.pth")
@@ -196,3 +211,13 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             'scheduler' : scheduler.state_dict(), 
             'img_scheduler' : img_scheduler_state, 
         }, checkpoint_path)
+
+        #for experiments
+        checkpoint_record = os.path.join(".", "stats", f"record_{epoch}.pth")
+        torch.save({
+            'score' : score,
+            'loss' : loss_train,
+            'epoch': epoch,
+            'clf1_gradient_norm' : clf1_grad_norm,
+            'emb0_gradient_norm' : emb0_grad_norm,
+        }, checkpoint_record)
