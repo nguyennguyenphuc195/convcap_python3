@@ -72,7 +72,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
         convcap_model.load_state_dict(check['state_dict'])
         optimizer.load_state_dict(check['optimizer'])
         scheduler.load_state_dict(check['scheduler'])
-        best_score = check["best_score"]
+        bestscore = check["best_score"]
         start_epoch = check["epoch"] + 1
 
         if check['img_optimizer']:
