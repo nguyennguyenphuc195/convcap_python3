@@ -34,7 +34,7 @@ class beamsearch:
         start_end_idx = [0]
         start_end_idx.extend(self.current_beam_size)
         start_end_idx = torch.cumsum(torch.LongTensor(start_end_idx), 0)
-        self.idx = start_end_idx
+        self.idx = start_end_idx.tolist()
 
     def expand_beam(self, outputs):
         selected_word_indices = []

@@ -88,12 +88,12 @@ def test_beam(convcap_model=None, image_model=None, split="val", \
                 for i, wordclass_idx in enumerate(wordclass_indices):
                     wordclass_feed[i, j + 1] = wordclass_idx
 
-    for i in range(batchsize):
-        num_words = len(outcaps[j])
-        if "EOS" in outcaps[j]:
-            num_words = outcaps[j].index("EOS")
-        outcap = ' '.join(outcaps[j][:num_words])
-        pred_captions.append({'image_id': img_id[j].item(), 'caption': outcap})
+        for j in range(batchsize):
+            num_words = len(outcaps[j])
+            if "EOS" in outcaps[j]:
+                num_words = outcaps[j].index("EOS")
+            outcap = ' '.join(outcaps[j][:num_words])
+            pred_captions.append({'image_id': img_id[j].item(), 'caption': outcap})
     
     scores = language_eval(pred_captions, ".", split)
     return scores

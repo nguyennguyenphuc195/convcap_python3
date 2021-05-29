@@ -39,7 +39,7 @@ def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
 
 def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num_layers=3,\
      is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8,\
-     model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None):
+     model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir="."):
     train_ds = coco_loader(data_root, split="train", ncap_per_img=ncap_per_img)
     print("[DEBUG] Data loaded size")
 
@@ -173,7 +173,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer_state = None
             img_scheduler_state  = None
 
-        scores, _ = test(convcap_model=convcap_model, image_model=image_model) 
+        scores, _ = test(convcap_model=convcap_model, image_model=image_model, split=f"val_{epoch}" ) 
         score  = scores["CIDEr"]
         print('[DEBUG] Training epoch %d has loss %f and score %f' % (epoch, loss_train, score))
         if img_optimizer:
@@ -186,7 +186,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
         if(score > bestscore):
             bestscore = score
             print('[DEBUG] Saving model at epoch %d with CIDer score of %f'% (epoch, score))
-            bestmodelfn = os.path.join(".", "checkpoint", "bestmodel.pth")
+            bestmodelfn = os.path.join(checkpoint_savedir, "bestmodel.pth")
             torch.save({
                 'best_score' : bestscore,
                 'loss' : loss_train,
@@ -199,7 +199,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
                 'img_scheduler' : img_scheduler_state, 
             }, bestmodelfn)
 
-        checkpoint_path = os.path.join(".", "checkpoint", "model.pth")
+        checkpoint_path = os.path.join(checkpoint_savedir, "model.pth")
         torch.save({
             'best_score' : bestscore,
             'loss' : loss_train,
@@ -213,7 +213,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
         }, checkpoint_path)
 
         #for experiments
-        checkpoint_record = os.path.join(".", "stats", f"record_{epoch}.pth")
+        checkpoint_record = os.path.join(stats_savedir, f"record_{epoch}.pth")
         torch.save({
             'score' : score,
             'loss' : loss_train,
