@@ -19,7 +19,7 @@ encoder.FLOAT_REPR = lambda o: format(o, '.3f')
 import sys
 
 
-def language_eval(input_data, savedir, split, scorers_incl="CIDEr"):
+def language_eval(input_data, savedir, fn, split, scorers_incl="CIDEr"):
     if type(input_data) == str: # Filename given.
         checkpoint = json.load(open(input_data, 'r'))
         preds = checkpoint
@@ -33,7 +33,7 @@ def language_eval(input_data, savedir, split, scorers_incl="CIDEr"):
     # Filter results to only those in MSCOCO validation set (will be about a third)
     preds_filt = [p for p in preds if p['image_id'] in valids]
     print('Using %d/%d predictions' % (len(preds_filt), len(preds)))
-    resFile = osp.join(savedir, 'result_%s.json' % (split))
+    resFile = osp.join(savedir, fn)
     json.dump(preds_filt, open(resFile, 'w')) # Serialize to temporary json file. Sigh, COCO API...
 
     cocoRes = coco.loadRes(resFile)

@@ -173,7 +173,7 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer_state = None
             img_scheduler_state  = None
 
-        scores, _ = test(convcap_model=convcap_model, image_model=image_model, split=f"val_{epoch}" ) 
+        scores, _ = test(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
         score  = scores["CIDEr"]
         print('[DEBUG] Training epoch %d has loss %f and score %f' % (epoch, loss_train, score))
         if img_optimizer:

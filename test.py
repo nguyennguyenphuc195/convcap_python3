@@ -30,7 +30,7 @@ def save_test_json(preds, resFile):
     json.dump(preds, open(resFile, 'w')) 
 
 def test(convcap_model=None, image_model=None, split="val", \
-         coco_root="data/coco/", batchsize=20):
+         coco_root="data/coco/", batchsize=20, fn="result.json", savedir="."):
     data = coco_loader(coco_root, split=split, ncap_per_img=1)
     data_loader = DataLoader(dataset=data, num_workers=2, batch_size=batchsize, shuffle=False, drop_last=True)
     data_loader = DeviceDataLoader(data_loader, default_device)
@@ -75,5 +75,5 @@ def test(convcap_model=None, image_model=None, split="val", \
             outcap = ' '.join(outcaps[j][:num_words])
             pred_captions.append({'image_id': img_id[j].item(), 'caption': outcap})
 
-    scores = language_eval(pred_captions, ".", split)
+    scores = language_eval(pred_captions, savedir, fn, split)
     return scores
