@@ -30,7 +30,7 @@ def ReduceConv1D(in_channels, mid_channels, out_channels, kernel_size, padding, 
     relu        = nn.ReLU()
     second_conv = Conv1D(mid_channels, out_channels, kernel_size, padding, dropout)
     return nn.Sequential(first_conv, relu, second_conv)
-    
+
 class AttentionLayer(nn.Module):
     def __init__(self, conv_channels, embed_dim):
         super(AttentionLayer, self).__init__()
@@ -94,9 +94,9 @@ class AttentionLayer(nn.Module):
         return out, attention_score
 
 class Convcap(nn.Module):
-    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1):
+    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1, nimgfeats=2048, reduce_dim=False):
         super(Convcap, self).__init__()
-        self.nimgfeats = 4096
+        self.nimgfeats = nimgfeats
         self.is_attention = is_attention
         self.nfeats = nfeats
         self.dropout = dropout
@@ -115,7 +115,11 @@ class Convcap(nn.Module):
         self.kernel_size = 5
         self.pad         = self.kernel_size - 1
         for i in range(self.n_layers):
-            self.convs.append(Conv1D(n_in, 2 * n_out, self.kernel_size, self.pad, dropout))
+            if reduce_dim == True:
+                conv = ReduceConv1D(n_in, 128, 2 * n_out, self.kernel_size, self.pad, dropout)
+            else:
+                conv = Conv1D(n_in, 2 * n_out, self.kernel_size, self.pad, dropout)
+            self.convs.append(conv)
             if self.is_attention:
                 self.attention.append(AttentionLayer(n_out, nfeats))
             n_in = n_out
