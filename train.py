@@ -38,7 +38,7 @@ def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
 
 
 def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num_layers=3,\
-     is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8, reduce_dim=False,\
+     is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8, reduce_dim=False, clip_grad=0.1,\
      model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir="."):
     train_ds = coco_loader(data_root, split="train", ncap_per_img=ncap_per_img)
     print("[DEBUG] Data loaded size")
@@ -140,6 +140,8 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             batch_count = batch_count + 1
 
             loss.backward()
+            grad_norm_convcap = torch.nn.utils.clip_grad_norm_(convcap_model.parameters(), clip_grad)
+            grad_norm_image   = torch.nn.utils.clip_grad_norm_(image_model.parameters(), clip_grad)
 
             optimizer.step()
             if img_optimizer != None:
