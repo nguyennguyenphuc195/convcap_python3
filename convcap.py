@@ -94,7 +94,7 @@ class AttentionLayer(nn.Module):
         return out, attention_score
 
 class Convcap(nn.Module):
-    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1, reduce_dim=False):
+    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1, kernel_size=5, positional_emb=False, maxtokens=15, reduce_dim=False):
         super(Convcap, self).__init__()
         self.nimgfeats = 4096
         self.is_attention = is_attention
@@ -112,8 +112,15 @@ class Convcap(nn.Module):
         self.n_layers = num_layers
         self.convs = nn.ModuleList()
         self.attention = nn.ModuleList()
-        self.kernel_size = 5
+        self.kernel_size = kernel_size
         self.pad         = self.kernel_size - 1
+
+        self.positional_emb = None
+        if positional_emb == True:
+            self.positional_emb = nn.Parameter(torch.rand(maxtokens, nfeats, requires_grad=True), requires_grad=True)
+            self.positional_emb.data.normal_(0, 0.1)
+
+
         for i in range(self.n_layers):
             if reduce_dim == True:
                 conv = ReduceConv1D(n_in, 128, 2 * n_out, self.kernel_size, self.pad, dropout)
@@ -132,6 +139,8 @@ class Convcap(nn.Module):
         attn_buffer = None
         wordemb = self.emb_0(wordclass)
         wordemb = self.emb_1(wordemb) # (batch_size, max_tokens, nfeats)
+        if self.positional_emb != None:
+            wordemb = (wordemb + self.positional_emb) * math.sqrt(0.5)
         # print(wordemb.size())
         x = wordemb.transpose(2, 1) # (batch_size, nfeats, max_tokens)
         batchsize, wordembdim, maxtokens = x.size()

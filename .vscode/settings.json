@@ -1,5 +1,6 @@
 {
     "files.watcherExclude": {
         "**/target": true
-    }
+    },
+    "python.pythonPath": "D:\\Anaconda3\\anaconda3\\envs\\deep_learning\\python.exe"
 }
