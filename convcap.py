@@ -134,7 +134,7 @@ class Convcap(nn.Module):
         self.classifier_0 = Linear(self.nfeats, (nfeats // 2))
         self.classifier_1 = Linear((nfeats // 2), num_wordclass, dropout=dropout)  
            
-    def forward(self, imgsfeats, imgsfc7, wordclass):
+    def forward(self, imgsfeats, imgsfc7, wordclass, return_all_attention=False):
 
         attn_buffer = None
         wordemb = self.emb_0(wordclass)
@@ -148,6 +148,9 @@ class Convcap(nn.Module):
         y = F.relu(self.imgproj(imgsfc7)) # (batch_size, nfeats)
         y = y.unsqueeze(2).expand(batchsize, self.nfeats, maxtokens) # (batch_size, nfeats, maxtokens)
         x = torch.cat([x, y], dim=1) # (batch_size, 2 * nfeats, maxtokens)
+
+        if return_all_attention == True:
+            all_attentions = []
 
         for i, conv in enumerate(self.convs):
             if i == 0:
@@ -166,6 +169,8 @@ class Convcap(nn.Module):
                 attn = self.attention[i]
                 x = x.transpose(2, 1) # (batch_size, maxtoken, nfeats)
                 x, attn_buffer = attn(x, wordemb, imgsfeats)
+                if return_all_attention == True:
+                    all_attentions.append(attn_buffer)
                 x = x.transpose(2, 1) # (batch_size, nfeats, maxtoken)
 
             x = (x + residual) * math.sqrt(0.5) # (batch_size, nfeats, maxtoken)
@@ -176,4 +181,7 @@ class Convcap(nn.Module):
         x = self.classifier_1(x) # (batch_size, maxtoken, vocabulary_size)
 
         x = x.transpose(2, 1) # (batch_size, vocabulary_size, maxtoken)
+        if return_all_attention == True:
+            return x, all_attentions
+            
         return x, attn_buffer
