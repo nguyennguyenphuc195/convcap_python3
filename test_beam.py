@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from beamsearch import beamsearch 
 from coco_loader import coco_loader
-from convcap import convcap
+from convcap import Convcap
 from vggfeats import Vgg16Feats
 from evaluate import language_eval
 from device import DeviceDataLoader, get_default_device, to_device
@@ -95,5 +95,5 @@ def test_beam(convcap_model=None, image_model=None, split="val", \
             outcap = ' '.join(outcaps[j][:num_words])
             pred_captions.append({'image_id': img_id[j].item(), 'caption': outcap})
     
-    scores = language_eval(pred_captions, ".", split)
+    scores = language_eval(pred_captions, ".", "result_val.json", split)
     return scores
