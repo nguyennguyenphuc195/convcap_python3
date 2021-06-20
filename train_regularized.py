@@ -39,8 +39,8 @@ def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
 
 def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num_layers=3,\
      is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8, reduce_dim=False, clip_grad=0.1,\
-     kernel_size=5, positional_emb=False, model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir=".", validate_with_beam_after=1e6):
-     
+     kernel_size=5, positional_emb=False, model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir="."):
+
     train_ds = coco_loader(data_root, split="train", ncap_per_img=ncap_per_img)
     print("[DEBUG] Data loaded size")
 
@@ -92,6 +92,9 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer = optim.RMSprop(image_model.parameters(), lr=1e-5)
             img_scheduler = lr_scheduler.StepLR(img_optimizer, step_size=lr_step_size, gamma=.1)
         
+        if epoch == 15:
+            img_optimizer.param_groups[0]['lr'] = 1e-6
+
         convcap_model.train()
         image_model.train()
         for imgs, wordclass, mask, img_id in tqdm(train_dl):
@@ -185,12 +188,8 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer_state = None
             img_scheduler_state  = None
 
-        if epoch >= validate_with_beam_after:
-            scores, _ = test_beam(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
-            score  = scores["CIDEr"]
-        else:
-            scores, _ = test(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
-            score  = scores["CIDEr"]
+        scores, _ = test(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
+        score  = scores["CIDEr"]
 
         print('[DEBUG] Training epoch %d has loss %f and score %f' % (epoch, loss_train, score))
         if img_optimizer:
