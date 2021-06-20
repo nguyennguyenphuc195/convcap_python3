@@ -35,7 +35,8 @@ def repeat_img_feats(conv_feats, lin_feats, beam_size=5):
     return conv_feats, lin_feats
 
 def test_beam(convcap_model=None, image_model=None, split="val", \
-              coco_root="data/coco/", batchsize=20, beam_size=5):
+              coco_root="data/coco/", batchsize=20, beam_size=5,
+              fn="result.json", savedir="."):
 
     data = coco_loader(coco_root, split=split, ncap_per_img=1)
     data_loader = DataLoader(dataset=data, num_workers=2, batch_size=batchsize, shuffle=False, drop_last=True)
@@ -95,5 +96,5 @@ def test_beam(convcap_model=None, image_model=None, split="val", \
             outcap = ' '.join(outcaps[j][:num_words])
             pred_captions.append({'image_id': img_id[j].item(), 'caption': outcap})
     
-    scores = language_eval(pred_captions, ".", "result_val.json", split)
+    scores = language_eval(pred_captions, savedir, fn, split)
     return scores

@@ -99,7 +99,7 @@ def plot_with_attention(img, attentions, outcap, bright=0.1):
     plt.savefig("plot_result.png", bbox_inches='tight')
     plt.show()
 
-def caption_image(convcap_model, image_model, img_root, max_tokens=15, plot=1, bright=0.1):
+def caption_image(convcap_model, image_model, img_root, max_tokens=15, plot=1, bright=0.1, att_idx=-1):
     convcap_model.train(False)
     image_model.train(False)
     
@@ -126,10 +126,11 @@ def caption_image(convcap_model, image_model, img_root, max_tokens=15, plot=1, b
         wordclass = to_device(torch.from_numpy(wordclass_feed), default_device)
         logits, all_attention_scores = convcap_model(conv_feats, lin_feats, wordclass, return_all_attention=True)
 
-        for l in range(len(attention_scores)):
-            attention_score = all_attention_scores[l]
-            attention_score = attention_score.view(1, max_tokens, 7, 7)
-            attention_scores[l].append(attention_score[:, j, :, :])
+        if plot == 2:
+            for l in range(len(attention_scores)):
+                attention_score = all_attention_scores[l]
+                attention_score = attention_score.view(1, max_tokens, 7, 7)
+                attention_scores[l].append(attention_score[:, j, :, :])
 
         logits = logits[:, :, :-1]
         #change shape to (bs_cap, maxtokens, vocabulary_size) 
@@ -165,6 +166,6 @@ def caption_image(convcap_model, image_model, img_root, max_tokens=15, plot=1, b
         regular_plot(img_plot, outcap)
     
     if plot == 2:
-        plot_with_attention(img_plot, attention_scores[-1], outcap, bright)
+        plot_with_attention(img_plot, attention_scores[att_idx], outcap, bright)
 
     return outcap, attention_scores

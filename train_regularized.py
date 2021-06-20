@@ -18,7 +18,7 @@ from convcap import Convcap
 from vggfeats import Vgg16Feats
 from device import DeviceDataLoader, get_default_device, to_device
 from test import test 
-
+from test_beam import test_beam
 default_device = get_default_device()
 
 def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
@@ -39,7 +39,8 @@ def repeat_img_feats(conv_feats, lin_feats, ncap_per_img=5):
 
 def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num_layers=3,\
      is_attention=True, learning_rate=5e-5, lr_step_size=15, finetune_after=8, reduce_dim=False, clip_grad=0.1,\
-     kernel_size=5, positional_emb=False, model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir="."):
+     kernel_size=5, positional_emb=False, model_dir=".", ImageCNN=Vgg16Feats, checkpoint=None, stats_savedir=".", checkpoint_savedir=".", validate_with_beam_after=1e6):
+     
     train_ds = coco_loader(data_root, split="train", ncap_per_img=ncap_per_img)
     print("[DEBUG] Data loaded size")
 
@@ -184,8 +185,13 @@ def train(data_root="./data/coco/", epochs=30, batchsize=20, ncap_per_img=5, num
             img_optimizer_state = None
             img_scheduler_state  = None
 
-        scores, _ = test(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
-        score  = scores["CIDEr"]
+        if epoch >= validate_with_beam_after:
+            scores, _ = test_beam(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
+            score  = scores["CIDEr"]
+        else:
+            scores, _ = test(convcap_model=convcap_model, image_model=image_model, fn=f"result_val_{epoch}.json", savedir=stats_savedir) 
+            score  = scores["CIDEr"]
+
         print('[DEBUG] Training epoch %d has loss %f and score %f' % (epoch, loss_train, score))
         if img_optimizer:
             img_optimizer_state = img_optimizer.state_dict()
