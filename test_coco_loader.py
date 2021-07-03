@@ -1,3 +1,11 @@
+import glob
+import math
+import numpy as np
+import os
+import os.path as osp
+import string 
+import pickle
+import json
 from PIL import Image
 
 import torch
@@ -5,11 +13,18 @@ from torch.utils.data import Dataset
 import torchvision.datasets as datasets
 import torchvision.transforms as T
 
+
 class coco_test_loader(Dataset):
     def __init__(self, coco_root, split_info):
         self.coco_root = coco_root
         self.get_split_info(split_info)
 
+        worddict_tmp = pickle.load(open("data/wordlist.p", "rb"))
+        wordlist = [l for l in worddict_tmp if l != "</S>"]
+        self.wordlist = ["EOS"] + sorted(wordlist)
+        self.vocab_size = len(self.wordlist)
+        print(f"[DEBUG] Vocabulary size {self.vocab_size}")
+        
         self.img_transforms = T.Compose([
             T.Resize((224, 224)),
             T.ToTensor(),
