@@ -94,9 +94,9 @@ class AttentionLayer(nn.Module):
         return out, attention_score
 
 class Convcap(nn.Module):
-    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1, kernel_size=5, positional_emb=False, maxtokens=15, reduce_dim=False):
+    def __init__(self, num_wordclass, num_layers=1, is_attention=True, nfeats=512, dropout=.1, kernel_size=5, nimgfeats=4096, positional_emb=False, maxtokens=15, reduce_dim=False):
         super(Convcap, self).__init__()
-        self.nimgfeats = 4096
+        self.nimgfeats = nimgfeats
         self.is_attention = is_attention
         self.nfeats = nfeats
         self.dropout = dropout
